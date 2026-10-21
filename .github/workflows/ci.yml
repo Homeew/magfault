@@ -1,0 +1,47 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: magfault
+          POSTGRES_PASSWORD: magfault
+          POSTGRES_DB: magfault
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U magfault"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      MAGFAULT_DSN: postgresql://magfault:magfault@localhost:5432/magfault
+      MAGFAULT_TEST_DSN: postgresql://magfault:magfault@localhost:5432/magfault_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - run: ruff check src tests
+      - name: Create test database
+        run: PGPASSWORD=magfault psql -h localhost -U magfault -d magfault -c "CREATE DATABASE magfault_test"
+      - run: pytest
+      - name: Synthetic end-to-end demo
+        run: |
+          magfault initdb
+          magfault synth --days 45 --out data/synth
+          magfault load data/synth
+          magfault inject --seed 42 --calibration-days 10 --per-type 2
+          magfault features
+          magfault detect
+          magfault evaluate --out reports/ci
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ci-report
+          path: reports/ci

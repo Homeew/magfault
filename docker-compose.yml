@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:16
+    container_name: magfault-db
+    environment:
+      POSTGRES_USER: magfault
+      POSTGRES_PASSWORD: magfault
+      POSTGRES_DB: magfault
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Applied automatically on first start (alphabetical order).
+      - ./sql/00_schema.sql:/docker-entrypoint-initdb.d/00_schema.sql:ro
+      - ./sql/10_functions.sql:/docker-entrypoint-initdb.d/10_functions.sql:ro
+    command: >
+      postgres
+        -c shared_buffers=512MB
+        -c work_mem=64MB
+        -c maintenance_work_mem=256MB
+        -c max_wal_size=2GB
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U magfault -d magfault"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Optional: run the pipeline inside a container instead of a local venv.
+  #   docker compose --profile app run --rm app make demo
+  app:
+    profiles: ["app"]
+    build: .
+    environment:
+      MAGFAULT_DSN: postgresql://magfault:magfault@db:5432/magfault
+    volumes:
+      - ./:/work
+    working_dir: /work
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

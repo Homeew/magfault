@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.env
+
+# Downloaded / generated data is reproducible from the CLI; keep it out of git.
+data/
+reports/run_*/
+!reports/.gitkeep
