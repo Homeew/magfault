@@ -27,12 +27,15 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("--end", type=_date, required=True)
     s.add_argument("--out", type=Path, default=Path("data/raw"))
     s.add_argument("--force", action="store_true")
+    s.add_argument("--chunk-days", type=int, default=16, help="max days per request")
 
     s = sub.add_parser("kp", help="fetch GFZ Kp index (JSON)")
     s.add_argument("--start", type=_date, required=True)
     s.add_argument("--end", type=_date, required=True)
     s.add_argument("--out", type=Path, default=Path("data/raw/kp"))
     s.add_argument("--force", action="store_true")
+    s.add_argument("--from-file", type=Path, default=None,
+                   help="use a Kp file downloaded by hand (GFZ JSON or Kp_ap_since_1932.txt)")
 
     s = sub.add_parser("synth", help="write a synthetic 4-station network + Kp (offline demo)")
     s.add_argument("--days", type=int, default=90)
@@ -65,12 +68,13 @@ def main(argv: list[str] | None = None) -> None:
     if args.cmd == "download":
         from .download import download_intermagnet
         stations = [c.strip().upper() for c in args.stations.split(",") if c.strip()]
-        files = download_intermagnet(stations, args.start, args.end, args.out, args.force)
+        files = download_intermagnet(stations, args.start, args.end, args.out, args.force,
+                                     max_days=args.chunk_days)
         print(f"{len(files)} new files under {args.out}")
         return
     if args.cmd == "kp":
         from .download import download_kp
-        print(download_kp(args.start, args.end, args.out, args.force))
+        download_kp(args.start, args.end, args.out, args.force, from_file=args.from_file)
         return
     if args.cmd == "synth":
         from .synth import write_network
