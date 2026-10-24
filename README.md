@@ -1,4 +1,4 @@
-# magfault
+# magfault Project
 
 **Is the sensor broken, or did the field actually change?**
 A PostgreSQL + detection-theory pipeline that separates instrument faults from real
