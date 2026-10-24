@@ -11,3 +11,4 @@ venv/
 data/
 reports/run_*/
 !reports/.gitkeep
+private/
