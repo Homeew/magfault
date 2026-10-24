@@ -93,7 +93,7 @@ flowchart LR
     K[GFZ Kp JSON] --> L
     L --> R[(readings<br/>monthly partitions)]
     R --> I[inject: fault_runs,<br/>injected_faults,<br/>fault_samples]
-    R --> O[readings_observed&#40;run&#41;<br/>SQL overlay]
+      R --> O["readings_observed(run)<br/>SQL overlay"]
     I --> O
     O --> F[build_features&#40;run&#41;<br/>PL/pgSQL]
     F --> D[detectors<br/>GLRT · CUSUM · network · IF]
